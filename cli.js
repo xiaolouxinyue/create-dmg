@@ -20,10 +20,11 @@ const cli = meow(`
 	  $ create-dmg <app> [destination]
 
 	Options
-	  --overwrite          Overwrite existing DMG with the same name
-	  --identity=<value>   Manually set code signing identity (automatic by default)
-	  --dmg-title=<value>  Manually set DMG title (must be <=27 characters) [default: App name]
-
+	  --overwrite                   Overwrite existing DMG with the same name
+	  --identity=<value>            Manually set code signing identity (automatic by default)
+	  --dmg-title=<value>           Manually set DMG title (must be <=27 characters) [default: App name]
+      --volume-icon=<icon.icns>     Manually set volume icon
+      --background=<pic.png>        Manually set folder background image (provide png, gif, jpg)
 	Examples
 	  $ create-dmg 'Lungo.app'
 	  $ create-dmg 'Lungo.app' Build/Releases
@@ -37,7 +38,13 @@ const cli = meow(`
 		},
 		dmgTitle: {
 			type: 'string'
-		}
+		},
+        volumeIcon: {
+            type: 'string'
+        },
+        background: {
+            type: 'string'
+        }
 	}
 });
 
@@ -84,7 +91,7 @@ async function init() {
 	}
 
 	const dmgTitle = cli.flags.dmgTitle || appName;
-	const dmgFilename = `${appName} ${appInfo.CFBundleShortVersionString}.dmg`;
+	const dmgFilename = `${dmgTitle} ${appInfo.CFBundleShortVersionString}.dmg`;
 	const dmgPath = path.join(destinationPath, dmgFilename);
 
 	if (dmgTitle > 27) {
@@ -116,29 +123,29 @@ async function init() {
 		basepath: process.cwd(),
 		specification: {
 			title: dmgTitle,
-			icon: composedIconPath,
+			icon: cli.flags.volumeIcon || composedIconPath,
 			//
 			// Use transparent background and `background-color` option when this is fixed:
 			// https://github.com/LinusU/node-appdmg/issues/135
-			background: path.join(__dirname, 'assets/dmg-background.png'),
-			'icon-size': 160,
+			background: cli.flags.background || path.join(__dirname, 'assets/dmg-background.png'),
+			'icon-size': 110,
 			format: dmgFormat,
 			window: {
 				size: {
-					width: 660,
-					height: 400
+					width: 600,
+					height: 340
 				}
 			},
 			contents: [
 				{
-					x: 180,
-					y: 170,
+					x: 135,
+					y: 130,
 					type: 'file',
 					path: appPath
 				},
 				{
-					x: 480,
-					y: 170,
+					x: 465,
+					y: 130,
 					type: 'link',
 					path: '/Applications'
 				}
@@ -160,7 +167,7 @@ async function init() {
 			if (hasAppIcon) {
 				ora.text = 'Replacing DMG icon';
 				// `seticon`` is a native tool to change files icons (Source: https://github.com/sveinbjornt/osxiconutils)
-				await execa(path.join(__dirname, 'seticon'), [composedIconPath, dmgPath]);
+				await execa(path.join(__dirname, 'seticon'), [cli.flags.volumeIcon || composedIconPath, dmgPath]);
 			}
 
 			ora.text = 'Code signing DMG';
