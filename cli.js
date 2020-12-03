@@ -91,7 +91,7 @@ async function init() {
 	}
 
 	const dmgTitle = cli.flags.dmgTitle || appName;
-	const dmgFilename = `${dmgTitle} ${appInfo.CFBundleShortVersionString}.dmg`;
+	const dmgFilename = `${dmgTitle}_${appInfo.CFBundleShortVersionString}.${appInfo.CFBundleVersion}.dmg`;
 	const dmgPath = path.join(destinationPath, dmgFilename);
 
 	if (dmgTitle > 27) {
